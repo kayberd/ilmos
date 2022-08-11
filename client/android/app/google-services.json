@@ -1,0 +1,46 @@
+{
+  "project_info": {
+    "project_number": "650965820102",
+    "project_id": "ilmos-3c35a",
+    "storage_bucket": "ilmos-3c35a.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:650965820102:android:59441671e29d23a6d02dc7",
+        "android_client_info": {
+          "package_name": "com.ilmos.android"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "650965820102-avsm1qortsco7b8mde83t4rrq2j9d07i.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyASlgAGNuxP6fGdkJ8aJ9oeqVzmyhDaqMo"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "650965820102-avsm1qortsco7b8mde83t4rrq2j9d07i.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "650965820102-gkdcq5nlp5rghg6qm7la0j0kmord8tct.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.ilmos.ios"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
