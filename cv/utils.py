@@ -1,16 +1,12 @@
 import cv2
-import numpy as np
 import torch
 import requests
-import argparse
+import credentials
 import json
-
-from model import Classifier
 from credentials import updateSeatURL
-from PIL import Image
 
-_COLOUR = (255, 255, 0)
-_THICKNESS = 2
+_COLOUR = (0, 0, 255)
+_THICKNESS = 5
 _NOISE_MARGIN = 5
 
 """
@@ -51,25 +47,25 @@ PATCHES = [
 ]
 
 DESK_STATUS = [
-    {"status": "VACANT", "signal": [0]*_NOISE_MARGIN},
-    {"status": "VACANT", "signal": [0]*_NOISE_MARGIN},
-    {"status": "VACANT", "signal": [0]*_NOISE_MARGIN},
-    {"status": "VACANT", "signal": [0]*_NOISE_MARGIN},
+    {"status": "", "signal": [0]*_NOISE_MARGIN},
+    {"status": "", "signal": [0]*_NOISE_MARGIN},
+    {"status": "", "signal": [0]*_NOISE_MARGIN},
+    {"status": "", "signal": [0]*_NOISE_MARGIN},
 
-    {"status": "VACANT", "signal": [0]*_NOISE_MARGIN},
-    {"status": "VACANT", "signal": [0]*_NOISE_MARGIN},
-    {"status": "VACANT", "signal": [0]*_NOISE_MARGIN},
-    {"status": "VACANT", "signal": [0]*_NOISE_MARGIN},
+    {"status": "", "signal": [0]*_NOISE_MARGIN},
+    {"status": "", "signal": [0]*_NOISE_MARGIN},
+    {"status": "", "signal": [0]*_NOISE_MARGIN},
+    {"status": "", "signal": [0]*_NOISE_MARGIN},
 
-    {"status": "VACANT", "signal": [0]*_NOISE_MARGIN},
-    {"status": "VACANT", "signal": [0]*_NOISE_MARGIN},
-    {"status": "VACANT", "signal": [0]*_NOISE_MARGIN},
-    {"status": "VACANT", "signal": [0]*_NOISE_MARGIN},
+    {"status": "", "signal": [0]*_NOISE_MARGIN},
+    {"status": "", "signal": [0]*_NOISE_MARGIN},
+    {"status": "", "signal": [0]*_NOISE_MARGIN},
+    {"status": "", "signal": [0]*_NOISE_MARGIN},
 
-    {"status": "VACANT", "signal": [0]*_NOISE_MARGIN},
-    {"status": "VACANT", "signal": [0]*_NOISE_MARGIN},
-    {"status": "VACANT", "signal": [0]*_NOISE_MARGIN},
-    {"status": "VACANT", "signal": [0]*_NOISE_MARGIN}
+    {"status": "", "signal": [0]*_NOISE_MARGIN},
+    {"status": "", "signal": [0]*_NOISE_MARGIN},
+    {"status": "", "signal": [0]*_NOISE_MARGIN},
+    {"status": "", "signal": [0]*_NOISE_MARGIN}
 ]
 
 def updateStatus(id, signal):
@@ -87,46 +83,35 @@ def updateStatus(id, signal):
     newStatus = "TAKEN" if sum(DESK_STATUS[id-1]['signal']) > 0 else "VACANT"
 
     if DESK_STATUS[id-1]['status'] != newStatus:
-        # print(f"Set seat {id} to {newStatus}")
+        #print(f"{'#'*10} Set seat {id} to {newStatus} {'#'*10}")
         DESK_STATUS[id-1]['status'] = newStatus
+
+        # print("*"*10 + "BEFORE REQUEST" + "*"*10)
+
         requests.put(f"{updateSeatURL}/{id}", data=json.dumps({"status": newStatus}), headers={"Content-Type": "application/json"})
 
-def getPatches(frame: np.ndarray):
-    result = list()
+        # print("#"*11 + "AFTER REQUEST" + "#"*10)
 
-    for patch in PATCHES:
-        result.append( (patch["id"], frame[patch["min_y"]: patch["max_y"], patch["min_x"]: patch["max_x"]]) )
+def getPatches(frameQueue, patchQueue):
+    while True:
+        result = list()
+        frame = frameQueue.get()
+        #print("frameQueue -= 1")
 
-    return result
+        for patch in PATCHES:
+            result.append( (patch["id"], frame[patch["min_y"]: patch["max_y"], patch["min_x"]: patch["max_x"]]) )
 
-def visualizePredictions(model: Classifier, frame: np.ndarray, transforms, device):
-    patches = getPatches(frame)
+        patchQueue.put((frame, result))
+        #print("patchQueue += 1")
 
-    for id, patch in patches:
-        _patch = Image.fromarray(patch).resize((150, 150))
-        tensor = transforms(_patch).to(device)
-        _, pred = torch.max(model(tensor), 1)
-
-        signal = "TAKEN" if pred[0] == 0 else "VACANT"
-
-        minCoords = PATCHES[id-1]["min_x"], PATCHES[id-1]["min_y"]
-        maxCoords = PATCHES[id-1]["max_x"], PATCHES[id-1]["max_y"]
-
-        if signal == "TAKEN" and sum(DESK_STATUS[id-1]['signal']) == _NOISE_MARGIN:   # show taken seats only
-            cv2.putText(frame, signal, (minCoords[0], minCoords[1]-5), cv2.FONT_HERSHEY_SIMPLEX, 1, _COLOUR, _THICKNESS)
-            cv2.rectangle(frame, minCoords, maxCoords, _COLOUR, _THICKNESS)
-
-        updateStatus(id, signal)
-
-    return frame
-
-def parse():
-    parser = argparse.ArgumentParser()
-    parser.add_argument('-bs', '--batch-size', default=4, type=int)
-    parser.add_argument('-lr', '--learning-rate', default=1e-3, type=float)
-    parser.add_argument('--H1', default=32, type=int)
-    parser.add_argument('--H2', default=8, type=int)
-    parser.add_argument('-ss', '--step-size', default=10, type=int)
-    parser.add_argument('-g', '--gamma', default=0.5, type=int)
-
-    return vars(parser.parse_args())
+def capture(frameQueue):
+    while True:
+        cap = cv2.VideoCapture(credentials.URL)
+        try:
+            while(cap.isOpened()):
+                    ret, frame = cap.read()     # numpy.ndarray
+                    if not ret: break
+                    frameQueue.put(frame)
+                    #print("frameQueue += 1")
+        except:
+            #print("Capture process crashed")
