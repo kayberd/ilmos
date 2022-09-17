@@ -7,7 +7,7 @@
   <img src="https://media.giphy.com/media/7FKE1rSZ4JAxMynFuH/giphy.gif" width="855" height="405"/>
 </p>
 
-ILMoS placed $4^{th}$ over $28$ senior projects at [CENG DEMODAY 2022](https://senior.ceng.metu.edu.tr/2022/mainpage/).
+ILMoS placed $4^{th}$ over $28$ senior projects at [CENG DemoDay 2022](https://senior.ceng.metu.edu.tr/2022/mainpage/).
 
 You can reach further details from the project clip:
 
